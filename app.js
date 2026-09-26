@@ -43,7 +43,7 @@ function escapeHtml(value){const el=document.createElement('div');el.textContent
 
 function render(){
   const visible=tasks.filter(task=>activeFilter==='all'||activeFilter==='pending'&&!task.done||activeFilter==='done'&&task.done);
-  document.getElementById('taskList').innerHTML=visible.map(task=>`<article class="task ${task.done?'done':''}"><input class="checkbox" type="checkbox" data-id="${task.id}" ${task.done?'checked':''} aria-label="Completar tarea" /><div><p class="task-title">${escapeHtml(task.title)}</p><p class="task-meta">${escapeHtml(task.subject||'Sin materia')} · ${prettyDate(task.due)}${task.createdBy?` · agregó ${escapeHtml(task.createdBy)}`:''}</p></div><span class="priority ${task.priority}">${task.priority[0].toUpperCase()+task.priority.slice(1)}</span><button class="delete-button" data-delete="${task.id}" aria-label="Eliminar tarea">×</button></article>`).join('');
+  document.getElementById('taskList').innerHTML=visible.map(task=>`<article class="task ${task.done?'done':''}"><input class="checkbox" type="checkbox" data-id="${task.id}" ${task.done?'checked':''} aria-label="Completar tarea" /><div><p class="task-title">${escapeHtml(task.title)}</p><p class="task-meta">${escapeHtml(task.subject||'Sin materia')} · ${prettyDate(task.due)}${task.createdBy?` · agregó ${escapeHtml(task.createdBy)}`:''}${task.done&&task.completedBy?` · ✓ completó ${escapeHtml(task.completedBy)}`:''}</p></div><span class="priority ${task.priority}">${task.priority[0].toUpperCase()+task.priority.slice(1)}</span><button class="delete-button" data-delete="${task.id}" aria-label="Eliminar tarea">×</button></article>`).join('');
   document.getElementById('emptyState').hidden=visible.length>0;
   const pending=tasks.filter(t=>!t.done).length, completed=tasks.filter(t=>t.done).length, total=tasks.length;
   document.getElementById('pendingSummary').textContent=`${pending} pendiente${pending===1?'':'s'} de ${total} tarea${total===1?'':'s'}.`;
@@ -101,7 +101,11 @@ document.getElementById('taskList').addEventListener('click', event=>{
 
 document.getElementById('taskList').addEventListener('change', event=>{
   if(!event.target.matches('.checkbox')) return;
-  tasksCollection.doc(event.target.dataset.id).update({done: event.target.checked}).catch(err=>alert('No se pudo actualizar la tarea: '+err.message));
+  const checked = event.target.checked;
+  tasksCollection.doc(event.target.dataset.id).update({
+    done: checked,
+    completedBy: checked ? username : null
+  }).catch(err=>alert('No se pudo actualizar la tarea: '+err.message));
 });
 
 document.getElementById('changeUser').addEventListener('click', ()=>{
