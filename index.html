@@ -40,6 +40,9 @@
       <section class="panel tasks-panel" aria-labelledby="tasksTitle">
         <div class="tasks-top">
           <div><h2 id="tasksTitle">Mis tareas</h2><p id="pendingSummary">0 pendientes.</p></div>
+          <nav class="filters" id="filters" aria-label="Filtrar tareas">
+            <button class="active" data-filter="all">Todas</button><button data-filter="pending">Pendientes</button><button data-filter="done">Completadas</button>
+          </nav>
         </div>
         <div id="taskList" class="task-list"></div>
         <p class="empty-state" id="emptyState" hidden>No hay tareas en esta sección.</p>
