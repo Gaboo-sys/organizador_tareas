@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi organizador</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .account-button{position:fixed;right:20px;bottom:18px;border:1px solid #e0e5f0;background:#fff;border-radius:999px;color:#7181aa;padding:8px 12px;font:800 12px "Nunito Sans",sans-serif;cursor:pointer;box-shadow:0 4px 14px #1a2e4c14}
+      #userModal{border:0;border-radius:18px;padding:0;width:min(390px,calc(100% - 28px));box-shadow:0 20px 60px #0f214455}#userModal::backdrop{background:#10213e85}#userModal form{padding:30px}#userModal h2{font-size:25px;line-height:1.1;margin:0 0 9px}#userModal p:not(.overline){color:#7181aa;font-size:14px;line-height:1.45;margin:0 0 22px}#userModal label{display:block;color:#6b7ca7;font-size:12px;font-weight:800;margin-bottom:16px}#userModal input{display:block;width:100%;height:44px;border:1px solid #d6ddea;border-radius:10px;background:#fafbfe;color:#10213e;font:700 14px "Nunito Sans",sans-serif;padding:0 13px;margin-top:6px}#userModal .add-button{width:100%}.task-form{grid-template-columns:minmax(190px,1.7fr) 1.1fr 1fr 1fr auto}@media(max-width:700px){.task-form{grid-template-columns:1fr 1fr}}
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="welcome">
+        <div>
+          <p class="overline">ORGANIZADOR PERSONAL</p>
+          <h1>Hola, <span id="usernameDisplay">amigo</span> <span aria-hidden="true">🐱</span></h1>
+          <p class="today" id="todayLabel"></p>
+        </div>
+        <section class="progress-card" aria-label="Progreso de hoy">
+          <p>Progreso de hoy</p>
+          <strong id="progressText">0 de 0</strong>
+          <div class="progress-track"><span id="progressBar"></span></div>
+        </section>
+      </header>
+      <section class="panel new-task-panel" aria-labelledby="newTaskTitle">
+        <h2 id="newTaskTitle">Nueva tarea</h2>
+        <form id="taskForm" class="task-form">
+          <label class="task-input">Tarea<input id="taskTitle" required placeholder="Ej. Terminar la tarea de matemáticas" /></label>
+          <label>Materia<select id="taskSubject"><option value="Matemáticas">Matemáticas</option><option value="Inglés">Inglés</option><option value="Conciencia Histórica">Conciencia Histórica</option><option value="La Energía">La Energía</option><option value="Módulo">Módulo</option><option value="Tutoría">Tutoría</option><option value="Educación física">Educación física</option><option value="Optativa">Optativa</option></select></label>
+          <label>Fecha<input id="taskDue" type="date" /></label>
+          <label>Prioridad<select id="taskPriority"><option value="media" selected>Media</option><option value="alta">Alta</option><option value="baja">Baja</option></select></label>
+          <button class="add-button" type="submit">+ Agregar</button>
+        </form>
+      </section>
+      <section class="panel tasks-panel" aria-labelledby="tasksTitle">
+        <div class="tasks-top">
+          <div><h2 id="tasksTitle">Mis tareas</h2><p id="pendingSummary">0 pendientes.</p></div>
+          <nav class="filters" id="filters" aria-label="Filtrar tareas">
+            <button class="active" data-filter="all">Todas</button><button data-filter="pending">Pendientes</button><button data-filter="done">Completadas</button>
+          </nav>
+        </div>
+        <div id="taskList" class="task-list"></div>
+        <p class="empty-state" id="emptyState" hidden>No hay tareas en esta sección.</p>
+      </section>
+    </main>
+    <button class="account-button" id="changeUser" type="button">Cambiar usuario</button>
+    <dialog id="userModal" aria-labelledby="userModalTitle">
+      <form id="userForm">
+        <p class="overline">TU ORGANIZADOR</p>
+        <h2 id="userModalTitle">Elige tu nombre de usuario</h2>
+        <p>Así podrás reconocer tus tareas cuando uses este dispositivo.</p>
+        <label>Nombre de usuario<input id="usernameInput" required maxlength="24" placeholder="Ej. Ana" autocomplete="username" /></label>
+        <button class="add-button" type="submit">Entrar al organizador</button>
+      </form>
+    </dialog>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
