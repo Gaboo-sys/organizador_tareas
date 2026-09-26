@@ -28,6 +28,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const tasksCollection = db.collection('tasks');
 
+let activeFilter = 'all';
 let username = localStorage.getItem('agenda-current-user') || '';
 let tasks = [];
 
@@ -40,13 +41,32 @@ dateInput.value = today;
 function prettyDate(value){if(!value)return 'Sin fecha límite';const day=new Date(value+'T12:00:00');return 'Entrega: '+day.toLocaleDateString('es-MX',{day:'numeric',month:'long'});}
 function escapeHtml(value){const el=document.createElement('div');el.textContent=value;return el.innerHTML;}
 
+// Cada tarea guarda un mapa completedBy: { "Ana": true, "Gabo": true }.
+// Así cada persona marca su propio avance sin borrar el de los demás.
+function completedNames(task){
+  const map = task.completedBy || {};
+  return Object.keys(map).filter(name=>map[name]);
+}
+function isDoneForMe(task){
+  const map = task.completedBy || {};
+  return !!map[username];
+}
+
 function render(){
-  document.getElementById('taskList').innerHTML = tasks.map(task=>`<article class="task"><div><p class="task-title">${escapeHtml(task.title)}</p><p class="task-meta">${escapeHtml(task.subject||'Sin materia')} · ${prettyDate(task.due)}${task.createdBy?` · agregó ${escapeHtml(task.createdBy)}`:''}</p></div><span class="priority ${task.priority}">${task.priority[0].toUpperCase()+task.priority.slice(1)}</span><button class="delete-button" data-delete="${task.id}" aria-label="Eliminar tarea">×</button></article>`).join('');
-  document.getElementById('emptyState').hidden = tasks.length>0;
-  const total = tasks.length;
-  document.getElementById('pendingSummary').textContent = `${total} tarea${total===1?'':'s'} en total.`;
-  document.getElementById('progressText').textContent = `${total} tarea${total===1?'':'s'}`;
-  document.getElementById('progressBar').style.width = total? '100%' : '0%';
+  const visible=tasks.filter(task=>{
+    const doneForMe = isDoneForMe(task);
+    return activeFilter==='all'||activeFilter==='pending'&&!doneForMe||activeFilter==='done'&&doneForMe;
+  });
+  document.getElementById('taskList').innerHTML=visible.map(task=>{
+    const doneForMe = isDoneForMe(task);
+    const names = completedNames(task);
+    return `<article class="task ${doneForMe?'done':''}"><input class="checkbox" type="checkbox" data-id="${task.id}" ${doneForMe?'checked':''} aria-label="Marcar que ya la terminé" /><div><p class="task-title">${escapeHtml(task.title)}</p><p class="task-meta">${escapeHtml(task.subject||'Sin materia')} · ${prettyDate(task.due)}${task.createdBy?` · agregó ${escapeHtml(task.createdBy)}`:''}${names.length?` · ✓ ${names.map(escapeHtml).join(', ')}`:''}</p></div><span class="priority ${task.priority}">${task.priority[0].toUpperCase()+task.priority.slice(1)}</span><button class="delete-button" data-delete="${task.id}" aria-label="Eliminar tarea">×</button></article>`;
+  }).join('');
+  document.getElementById('emptyState').hidden=visible.length>0;
+  const pending=tasks.filter(t=>!isDoneForMe(t)).length, completed=tasks.filter(t=>isDoneForMe(t)).length, total=tasks.length;
+  document.getElementById('pendingSummary').textContent=`${pending} pendiente${pending===1?'':'s'} de ${total} tarea${total===1?'':'s'}.`;
+  document.getElementById('progressText').textContent=`${completed} de ${total}`;
+  document.getElementById('progressBar').style.width=total?`${Math.round(completed/total*100)}%`:'0%';
 }
 
 function listenTasks(){
@@ -63,6 +83,7 @@ function startUser(name){
   username = name.trim();
   localStorage.setItem('agenda-current-user', username);
   document.getElementById('usernameDisplay').textContent = username;
+  render();
 }
 
 document.getElementById('todayLabel').textContent = 'Hoy es ' + new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}) + '.';
@@ -75,6 +96,7 @@ document.getElementById('taskForm').addEventListener('submit', event=>{
     subject: document.getElementById('taskSubject').value,
     due: dateInput.value,
     priority: document.getElementById('taskPriority').value,
+    completedBy: {},
     createdBy: username,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).catch(err=>alert('No se pudo guardar la tarea: '+err.message));
@@ -82,10 +104,26 @@ document.getElementById('taskForm').addEventListener('submit', event=>{
   dateInput.value = today;
 });
 
+document.getElementById('filters').addEventListener('click', event=>{
+  const button = event.target.closest('button[data-filter]');
+  if(!button) return;
+  activeFilter = button.dataset.filter;
+  document.querySelectorAll('[data-filter]').forEach(item=>item.classList.toggle('active', item===button));
+  render();
+});
+
 document.getElementById('taskList').addEventListener('click', event=>{
   const remove = event.target.closest('[data-delete]');
   if(!remove) return;
   tasksCollection.doc(remove.dataset.delete).delete().catch(err=>alert('No se pudo borrar la tarea: '+err.message));
+});
+
+document.getElementById('taskList').addEventListener('change', event=>{
+  if(!event.target.matches('.checkbox')) return;
+  const checked = event.target.checked;
+  const fieldPath = new firebase.firestore.FieldPath('completedBy', username);
+  tasksCollection.doc(event.target.dataset.id).update(fieldPath, checked)
+    .catch(err=>alert('No se pudo actualizar la tarea: '+err.message));
 });
 
 document.getElementById('changeUser').addEventListener('click', ()=>{
