@@ -28,7 +28,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const tasksCollection = db.collection('tasks');
 
-let activeFilter = 'all';
 let username = localStorage.getItem('agenda-current-user') || '';
 let tasks = [];
 
@@ -41,5 +40,64 @@ dateInput.value = today;
 function prettyDate(value){if(!value)return 'Sin fecha límite';const day=new Date(value+'T12:00:00');return 'Entrega: '+day.toLocaleDateString('es-MX',{day:'numeric',month:'long'});}
 function escapeHtml(value){const el=document.createElement('div');el.textContent=value;return el.innerHTML;}
 
-// Cada tarea guarda un mapa completedBy: { "Ana": true, "Gabo": true }.
-// Así cada persona marca su
+function render(){
+  document.getElementById('taskList').innerHTML = tasks.map(task=>`<article class="task"><div><p class="task-title">${escapeHtml(task.title)}</p><p class="task-meta">${escapeHtml(task.subject||'Sin materia')} · ${prettyDate(task.due)}${task.createdBy?` · agregó ${escapeHtml(task.createdBy)}`:''}</p></div><span class="priority ${task.priority}">${task.priority[0].toUpperCase()+task.priority.slice(1)}</span><button class="delete-button" data-delete="${task.id}" aria-label="Eliminar tarea">×</button></article>`).join('');
+  document.getElementById('emptyState').hidden = tasks.length>0;
+  const total = tasks.length;
+  document.getElementById('pendingSummary').textContent = `${total} tarea${total===1?'':'s'} en total.`;
+  document.getElementById('progressText').textContent = `${total} tarea${total===1?'':'s'}`;
+  document.getElementById('progressBar').style.width = total? '100%' : '0%';
+}
+
+function listenTasks(){
+  tasksCollection.orderBy('createdAt','desc').onSnapshot(snapshot=>{
+    tasks = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+    render();
+  }, err=>{
+    console.error('Error leyendo tareas:', err);
+    document.getElementById('pendingSummary').textContent = 'No se pudieron cargar las tareas. Revisa la configuración de Firebase o tu conexión.';
+  });
+}
+
+function startUser(name){
+  username = name.trim();
+  localStorage.setItem('agenda-current-user', username);
+  document.getElementById('usernameDisplay').textContent = username;
+}
+
+document.getElementById('todayLabel').textContent = 'Hoy es ' + new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}) + '.';
+
+document.getElementById('taskForm').addEventListener('submit', event=>{
+  event.preventDefault();
+  const title = document.getElementById('taskTitle');
+  tasksCollection.add({
+    title: title.value.trim(),
+    subject: document.getElementById('taskSubject').value,
+    due: dateInput.value,
+    priority: document.getElementById('taskPriority').value,
+    createdBy: username,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(err=>alert('No se pudo guardar la tarea: '+err.message));
+  title.value = '';
+  dateInput.value = today;
+});
+
+document.getElementById('taskList').addEventListener('click', event=>{
+  const remove = event.target.closest('[data-delete]');
+  if(!remove) return;
+  tasksCollection.doc(remove.dataset.delete).delete().catch(err=>alert('No se pudo borrar la tarea: '+err.message));
+});
+
+document.getElementById('changeUser').addEventListener('click', ()=>{
+  document.getElementById('usernameInput').value = username;
+  userModal.showModal();
+});
+
+document.getElementById('userForm').addEventListener('submit', event=>{
+  event.preventDefault();
+  startUser(document.getElementById('usernameInput').value);
+  userModal.close();
+});
+
+if(username){ startUser(username); } else { userModal.showModal(); }
+listenTasks();
