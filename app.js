@@ -22,22 +22,22 @@ const userModal = document.getElementById('userModal');
 const editModal = document.getElementById('editModal');
 
 function localToday(){
-  const d=new Date();
-  const off=d.getTimezoneOffset();
-  return new Date(d.getTime()-off*60000).toISOString().slice(0,10);
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 const today = localToday();
 dateInput.value = today;
 
 function prettyDate(value){
-  if(!value)return 'Sin fecha límite';
-  const day=new Date(value+'T12:00:00');
-  return 'Entrega: '+day.toLocaleDateString('es-MX',{day:'numeric',month:'long'});
+  if(!value) return 'Sin fecha límite';
+  const day = new Date(value + 'T12:00:00');
+  return 'Entrega: ' + day.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
 }
 
 function escapeHtml(value){
-  const el=document.createElement('div');
-  el.textContent=value;
+  const el = document.createElement('div');
+  el.textContent = value;
   return el.innerHTML;
 }
 
@@ -73,10 +73,10 @@ function render(){
 }
 
 function listenTasks(){
-  tasksCollection.orderBy('createdAt','desc').onSnapshot(snapshot=>{
-    tasks = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+  tasksCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+    tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     render();
-  }, err=>{
+  }, err => {
     console.error('Error leyendo tareas:', err);
     document.getElementById('pendingSummary').textContent = 'No se pudieron cargar las tareas. Revisa la configuración de Firebase o tu conexión.';
   });
@@ -88,10 +88,10 @@ function startUser(name){
   document.getElementById('usernameDisplay').textContent = username;
 }
 
-document.getElementById('todayLabel').textContent = 'Hoy es ' + new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}) + '.';
+document.getElementById('todayLabel').textContent = 'Hoy es ' + new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) + '.';
 
 // Crear nueva tarea
-document.getElementById('taskForm').addEventListener('submit', event=>{
+document.getElementById('taskForm').addEventListener('submit', event => {
   event.preventDefault();
   const title = document.getElementById('taskTitle');
   tasksCollection.add({
@@ -102,30 +102,30 @@ document.getElementById('taskForm').addEventListener('submit', event=>{
     done: false,
     createdBy: username,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(err=>alert('No se pudo guardar la tarea: '+err.message));
+  }).catch(err => alert('No se pudo guardar la tarea: ' + err.message));
   title.value = '';
   dateInput.value = today;
 });
 
-// Filtros de tareas
-document.getElementById('filters').addEventListener('click', event=>{
+// Filtros
+document.getElementById('filters').addEventListener('click', event => {
   const button = event.target.closest('button[data-filter]');
   if(!button) return;
   activeFilter = button.dataset.filter;
-  document.querySelectorAll('[data-filter]').forEach(item=>item.classList.toggle('active', item===button));
+  document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active', item === button));
   render();
 });
 
-// Eventos en la lista de tareas (Eliminar y Abrir modal para Editar)
-document.getElementById('taskList').addEventListener('click', event=>{
-  // Eliminar
+// Clics en la lista (Eliminar y Abrir Modal de Edición)
+document.getElementById('taskList').addEventListener('click', event => {
+  // Eliminar tarea
   const remove = event.target.closest('[data-delete]');
   if(remove) {
-    tasksCollection.doc(remove.dataset.delete).delete().catch(err=>alert('No se pudo borrar la tarea: '+err.message));
+    tasksCollection.doc(remove.dataset.delete).delete().catch(err => alert('No se pudo borrar la tarea: ' + err.message));
     return;
   }
 
-  // Editar
+  // Abrir modal para Editar tarea
   const editBtn = event.target.closest('[data-edit]');
   if(editBtn && editModal) {
     const taskId = editBtn.dataset.edit;
@@ -143,9 +143,9 @@ document.getElementById('taskList').addEventListener('click', event=>{
 });
 
 // Marcar como completada/pendiente
-document.getElementById('taskList').addEventListener('change', event=>{
+document.getElementById('taskList').addEventListener('change', event => {
   if(!event.target.matches('.checkbox')) return;
-  tasksCollection.doc(event.target.dataset.id).update({done: event.target.checked}).catch(err=>alert('No se pudo actualizar la tarea: '+err.message));
+  tasksCollection.doc(event.target.dataset.id).update({ done: event.target.checked }).catch(err => alert('No se pudo actualizar la tarea: ' + err.message));
 });
 
 // Cerrar modal de edición al hacer clic en Cancelar
@@ -156,7 +156,7 @@ if (closeEditBtn && editModal) {
   });
 }
 
-// Enviar cambios de edición a Firestore
+// Enviar cambios de edición a Firebase
 const editTaskForm = document.getElementById('editTaskForm');
 if (editTaskForm && editModal) {
   editTaskForm.addEventListener('submit', event => {
@@ -174,13 +174,13 @@ if (editTaskForm && editModal) {
   });
 }
 
-// Modal de usuario
-document.getElementById('changeUser').addEventListener('click', ()=>{
+// Modal de cambio de usuario
+document.getElementById('changeUser').addEventListener('click', () => {
   document.getElementById('usernameInput').value = username;
   userModal.showModal();
 });
 
-document.getElementById('userForm').addEventListener('submit', event=>{
+document.getElementById('userForm').addEventListener('submit', event => {
   event.preventDefault();
   startUser(document.getElementById('usernameInput').value);
   userModal.close();
