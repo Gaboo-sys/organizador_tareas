@@ -50,6 +50,42 @@
     </main>
     <button class="account-button" id="changeUser" type="button">Cambiar usuario</button>
     <dialog id="userModal" aria-labelledby="userModalTitle">
+<dialog id="editModal" aria-labelledby="editModalTitle">
+  <form id="editTaskForm">
+    <p class="overline">EDITAR TAREA</p>
+    <h2 id="editModalTitle">Modificar tarea</h2>
+    <input type="hidden" id="editTaskId" />
+    <label>Tarea
+      <input id="editTaskTitle" required placeholder="Ej. Terminar la tarea de matemáticas" />
+    </label>
+    <label>Materia
+      <select id="editTaskSubject">
+        <option value="Matemáticas">Matemáticas</option>
+        <option value="Inglés">Inglés</option>
+        <option value="Conciencia Histórica">Conciencia Histórica</option>
+        <option value="La Energía">La Energía</option>
+        <option value="Módulo">Módulo</option>
+        <option value="Tutoría">Tutoría</option>
+        <option value="Educación física">Educación física</option>
+        <option value="Optativa">Optativa</option>
+      </select>
+    </label>
+    <label>Fecha
+      <input id="editTaskDue" type="date" />
+    </label>
+    <label>Prioridad
+      <select id="editTaskPriority">
+        <option value="media">Media</option>
+        <option value="alta">Alta</option>
+        <option value="baja">Baja</option>
+      </select>
+    </label>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button class="add-button" type="submit">Guardar Cambios</button>
+      <button class="cancel-button" type="button" id="closeEditModal">Cancelar</button>
+    </div>
+  </form>
+</dialog>
       <form id="userForm">
         <p class="overline">TU ORGANIZADOR</p>
         <h2 id="userModalTitle">Elige tu nombre de usuario</h2>
