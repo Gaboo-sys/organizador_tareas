@@ -1,120 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mi organizador</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="page">
-      <header class="welcome">
-        <div>
-          <p class="overline">ORGANIZADOR PERSONAL</p>
-          <h1>Hola, <span id="usernameDisplay">amigo</span> <span aria-hidden="true">🐱</span></h1>
-          <p class="today" id="todayLabel"></p>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi organizador</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/906/906334.png" type="image/png">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Encabezado / Header -->
+    <header class="header">
+      <div class="user-greeting">
+        <span class="sub-title">ORGANIZADOR PERSONAL</span>
+        <h1>Hola, <span id="userNameDisplay">Gabo</span> 🐱</h1>
+        <p class="date-display" id="currentDateDisplay">Hoy es viernes, 2 de octubre.</p>
+      </div>
+      <div class="progress-box">
+        <span class="progress-title">Progreso de hoy</span>
+        <div class="progress-count" id="progressText">0 de 0</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
         </div>
-        <section class="progress-card" aria-label="Progreso de hoy">
-          <p>Progreso de hoy</p>
-          <strong id="progressText">0 de 0</strong>
-          <div class="progress-track"><span id="progressBar"></span></div>
-        </section>
-      </header>
-      <section class="panel new-task-panel" aria-labelledby="newTaskTitle">
-        <h2 id="newTaskTitle">Nueva tarea</h2>
-        <form id="taskForm" class="task-form">
-          <label class="task-input">Tarea<input id="taskTitle" required placeholder="Ej. Terminar la tarea de matemáticas" /></label>
-          <label>Materia
+      </div>
+    </header>
+
+    <!-- Formulario Nueva Tarea -->
+    <section class="card form-card">
+      <h2>Nueva tarea</h2>
+      <form id="taskForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="taskTitle">Tarea</label>
+            <input type="text" id="taskTitle" placeholder="Ej. Terminar la tarea de matemáticas" required>
+          </div>
+          <div class="form-group">
+            <label for="taskSubject">Materia</label>
             <select id="taskSubject">
               <option value="Matemáticas">Matemáticas</option>
+              <option value="Español">Español</option>
               <option value="Inglés">Inglés</option>
-              <option value="Conciencia Histórica">Conciencia Histórica</option>
-              <option value="La Energía">La Energía</option>
               <option value="Módulo">Módulo</option>
-              <option value="Tutoría">Tutoría</option>
-              <option value="Educación física">Educación física</option>
-              <option value="Optativa">Optativa</option>
+              <option value="Otro">Otro</option>
             </select>
-          </label>
-          <label>Fecha<input id="taskDue" type="date" /></label>
-          <label>Prioridad
+          </div>
+          <div class="form-group">
+            <label for="taskDue">Fecha</label>
+            <input type="date" id="taskDue">
+          </div>
+          <div class="form-group">
+            <label for="taskPriority">Prioridad</label>
             <select id="taskPriority">
-              <option value="media" selected>Media</option>
-              <option value="alta">Alta</option>
-              <option value="baja">Baja</option>
+              <option value="Baja">Baja</option>
+              <option value="Media" selected>Media</option>
+              <option value="Alta">Alta</option>
             </select>
-          </label>
-          <button class="add-button" type="submit">+ Agregar</button>
-        </form>
-      </section>
-      <section class="panel tasks-panel" aria-labelledby="tasksTitle">
-        <div class="tasks-top">
-          <div><h2 id="tasksTitle">Mis tareas</h2><p id="pendingSummary">0 pendientes.</p></div>
-          <nav class="filters" id="filters" aria-label="Filtrar tareas">
-            <button class="active" data-filter="all">Todas</button><button data-filter="pending">Pendientes</button><button data-filter="done">Completadas</button>
-          </nav>
-        </div>
-        <div id="taskList" class="task-list"></div>
-        <p class="empty-state" id="emptyState" hidden>No hay tareas en esta sección.</p>
-      </section>
-    </main>
-
-    <button class="account-button" id="changeUser" type="button">Cambiar usuario</button>
-
-    <!-- Modal para Nombre de Usuario -->
-    <dialog id="userModal" aria-labelledby="userModalTitle">
-      <form id="userForm">
-        <p class="overline">TU ORGANIZADOR</p>
-        <h2 id="userModalTitle">Elige tu nombre de usuario</h2>
-        <p>Así podrás reconocer tus tareas cuando uses este dispositivo.</p>
-        <label>Nombre de usuario<input id="usernameInput" required maxlength="24" placeholder="Ej. Ana" autocomplete="username" /></label>
-        <button class="add-button" type="submit">Entrar al organizador</button>
-      </form>
-    </dialog>
-
-    <!-- Modal para Editar Tarea -->
-    <dialog id="editModal" aria-labelledby="editModalTitle">
-      <form id="editTaskForm">
-        <p class="overline">EDITAR TAREA</p>
-        <h2 id="editModalTitle">Modificar tarea</h2>
-        <input type="hidden" id="editTaskId" />
-        <label>Tarea
-          <input id="editTaskTitle" required placeholder="Ej. Terminar la tarea de matemáticas" />
-        </label>
-        <label>Materia
-          <select id="editTaskSubject">
-            <option value="Matemáticas">Matemáticas</option>
-            <option value="Inglés">Inglés</option>
-            <option value="Conciencia Histórica">Conciencia Histórica</option>
-            <option value="La Energía">La Energía</option>
-            <option value="Módulo">Módulo</option>
-            <option value="Tutoría">Tutoría</option>
-            <option value="Educación física">Educación física</option>
-            <option value="Optativa">Optativa</option>
-          </select>
-        </label>
-        <label>Fecha
-          <input id="editTaskDue" type="date" />
-        </label>
-        <label>Prioridad
-          <select id="editTaskPriority">
-            <option value="media">Media</option>
-            <option value="alta">Alta</option>
-            <option value="baja">Baja</option>
-          </select>
-        </label>
-        <div class="modal-buttons">
-          <button class="add-button" type="submit">Guardar Cambios</button>
-          <button class="cancel-button" type="button" id="closeEditModal">Cancelar</button>
+          </div>
+          <div class="form-group button-group">
+            <button type="submit" class="btn-primary">+ Agregar</button>
+          </div>
         </div>
       </form>
-    </dialog>
+    </section>
 
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-    <script src="app.js"></script>
-  </body>
+    <!-- Sección de Lista de Tareas -->
+    <section class="card list-card">
+      <div class="list-header">
+        <div>
+          <h2>Mis tareas</h2>
+          <span class="task-counter" id="taskCounterText">0 pendientes</span>
+        </div>
+        <div class="filter-tabs">
+          <button class="tab-btn active" data-filter="all">Todas</button>
+          <button class="tab-btn" data-filter="pending">Pendientes</button>
+          <button class="tab-btn" data-filter="completed">Completadas</button>
+        </div>
+      </div>
+
+      <ul class="task-list" id="taskList">
+        <!-- Las tareas se renderizan dinámicamente aquí -->
+      </ul>
+    </section>
+  </div>
+
+  <!-- SDKs de Firebase (compatiblidad v10) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js"></script>
+
+  <!-- Script Principal -->
+  <script src="app.js"></script>
+</body>
 </html>
