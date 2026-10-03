@@ -201,7 +201,6 @@ body {
   gap: 10px;
 }
 
-/* Distribución de la tarea en escritorio: Checkbox | Texto | Prioridad | Editar | Eliminar */
 .task {
   display: grid;
   grid-template-columns: 23px minmax(0, 1fr) auto auto auto;
@@ -316,7 +315,6 @@ body {
   box-shadow: 0 4px 14px #1a2e4c14;
 }
 
-/* Modales */
 #userModal, #editModal {
   border: 0;
   border-radius: 18px;
