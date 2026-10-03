@@ -15,27 +15,34 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const messaging = firebase.messaging();
 
-// Activar persistencia de datos local (Offline)
-db.settings({
-  cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-});
-
+// Persistencia local para funcionamiento Offline
+db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
 db.enablePersistence({ synchronizeTabs: true }).catch(err => {
   if (err.code === 'failed-precondition') {
-    console.warn('Persistencia: Múltiples pestañas abiertas a la vez.');
+    console.warn('Persistencia: Abierta en múltiples pestañas.');
   } else if (err.code === 'unimplemented') {
-    console.warn('El navegador no soporta persistencia offline.');
+    console.warn('Persistencia no soportada por el navegador.');
   }
 });
 
 const tasksCollection = db.collection('tasks');
 const VAPID_KEY = "BK3fiy_90rnrxY5jKf0uXAo3UUyK3kC55pasjtQuZ55r-e8Xsh_0BaqebdPXc-W35ijwClh5Zy9Ub4fdodlDhU8";
+let username = "Gabo";
+
+// Actualizar la fecha actual en pantalla automáticamente
+function setDynamicDate() {
+  const dateEl = document.getElementById('currentDateDisplay');
+  if (dateEl) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const today = new Date().toLocaleDateString('es-ES', options);
+    dateEl.textContent = today.charAt(0).toUpperCase() + today.slice(1);
+  }
+}
+setDynamicDate();
 
 // -------------------------------------------------------------
 // 2. CONFIGURACIÓN DE NOTIFICACIONES PUSH (FCM)
 // -------------------------------------------------------------
-let username = "Gabo";
-
 function setupNotifications() {
   if ('serviceWorker' in navigator && 'Notification' in window) {
     navigator.serviceWorker.register('./firebase-messaging-sw.js')
@@ -61,7 +68,7 @@ function setupNotifications() {
   }
 }
 
-// Escuchar notificaciones cuando la web esté activa
+// Escuchar notificaciones en primer plano
 messaging.onMessage((payload) => {
   if (Notification.permission === 'granted') {
     new Notification(payload.notification?.title || '📌 Nueva Tarea', {
@@ -72,12 +79,12 @@ messaging.onMessage((payload) => {
 });
 
 // -------------------------------------------------------------
-// 3. LÓGICA DE LA APLICACIÓN Y NAVEGACIÓN
+// 3. LÓGICA DE LA APLICACIÓN Y RENDERIZADO
 // -------------------------------------------------------------
 let tasks = [];
 let currentFilter = 'all';
 
-// Elementos del DOM
+// Elementos DOM
 const taskForm = document.getElementById('taskForm');
 const taskTitle = document.getElementById('taskTitle');
 const taskSubject = document.getElementById('taskSubject');
@@ -89,11 +96,11 @@ const progressText = document.getElementById('progressText');
 const progressBarFill = document.getElementById('progressBarFill');
 const tabButtons = document.querySelectorAll('.tab-btn');
 
-// Establecer fecha por defecto en el input (hoy)
+// Establecer fecha por defecto hoy
 const todayString = new Date().toISOString().split('T')[0];
 if (taskDue) taskDue.value = todayString;
 
-// Escuchar cambios en la base de datos en tiempo real (Compatible Offline)
+// Escuchar base de datos en tiempo real (Offline enabled)
 function listenTasks() {
   tasksCollection.orderBy('createdAt', 'desc').onSnapshot({ includeMetadataChanges: true }, snapshot => {
     tasks = snapshot.docs.map(doc => ({
@@ -102,20 +109,18 @@ function listenTasks() {
     }));
     render();
   }, err => {
-    console.error('Error leyendo tareas:', err);
+    console.error('Error al obtener tareas:', err);
   });
 }
 
-// Renderizar tareas y progreso
+// Renderizar tareas y barra de progreso
 function render() {
-  // Filtrado
   const filteredTasks = tasks.filter(t => {
     if (currentFilter === 'pending') return !t.done;
     if (currentFilter === 'completed') return t.done;
     return true;
   });
 
-  // Contador y Barra de Progreso
   const total = tasks.length;
   const completed = tasks.filter(t => t.done).length;
   const pending = total - completed;
@@ -127,7 +132,6 @@ function render() {
   }
   if (taskCounterText) taskCounterText.textContent = `${pending} pendientes de ${total} tareas.`;
 
-  // Renderizar Lista
   taskList.innerHTML = '';
   if (filteredTasks.length === 0) {
     taskList.innerHTML = `<li class="empty-msg">No hay tareas para mostrar.</li>`;
@@ -156,14 +160,13 @@ function render() {
   });
 }
 
-// Escapar HTML para evitar fallos/inyecciones
 function escapeHTML(str) {
   return str ? str.replace(/[&<>'"]/g, tag => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
   }[tag] || tag)) : '';
 }
 
-// Evento: Agregar nueva tarea (Funciona Offline Instantáneo)
+// Evento: Crear Tarea
 taskForm.addEventListener('submit', event => {
   event.preventDefault();
 
@@ -177,12 +180,11 @@ taskForm.addEventListener('submit', event => {
     priority: taskPriority.value,
     done: false,
     createdBy: username,
-    createdAt: Date.now() // Hora local compatible offline
+    createdAt: Date.now()
   };
 
   tasksCollection.add(newTask)
     .then(() => {
-      // Notificación local inmediata
       if (Notification.permission === 'granted') {
         new Notification('Tarea agregada 📝', {
           body: `${username} agregó: "${title}"`,
@@ -190,14 +192,13 @@ taskForm.addEventListener('submit', event => {
         });
       }
     })
-    .catch(err => console.error('Error al guardar la tarea:', err));
+    .catch(err => console.error('Error guardando la tarea:', err));
 
-  // Reset del campo de título de inmediato
   taskTitle.value = '';
   taskDue.value = todayString;
 });
 
-// Eventos de delegación en la lista (Check y Eliminar)
+// Eventos Checkbox y Borrar
 taskList.addEventListener('click', event => {
   const target = event.target;
   const taskId = target.getAttribute('data-id');
@@ -205,9 +206,7 @@ taskList.addEventListener('click', event => {
   if (!taskId) return;
 
   if (target.classList.contains('task-checkbox')) {
-    tasksCollection.doc(taskId).update({
-      done: target.checked
-    });
+    tasksCollection.doc(taskId).update({ done: target.checked });
   }
 
   if (target.classList.contains('btn-delete')) {
@@ -215,7 +214,7 @@ taskList.addEventListener('click', event => {
   }
 });
 
-// Eventos de Filtrado por Solapas (Tabs)
+// Eventos de Pestañas/Filtros
 tabButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     tabButtons.forEach(b => b.classList.remove('active'));
@@ -225,6 +224,6 @@ tabButtons.forEach(btn => {
   });
 });
 
-// Inicializar la aplicación
+// Inicializar
 setupNotifications();
 listenTasks();
