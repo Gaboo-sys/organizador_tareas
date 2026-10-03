@@ -11,6 +11,16 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// Activar persistencia sin conexión (Offline Mode) en Firestore
+db.enablePersistence().catch(err => {
+  if (err.code === 'failed-precondition') {
+    console.warn('Persistencia fallida: Se abrió la app en varias pestañas simultáneamente.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('El navegador no soporta persistencia offline.');
+  }
+});
+
 const tasksCollection = db.collection('tasks');
 
 let activeFilter = 'all';
@@ -78,7 +88,7 @@ function listenTasks(){
     render();
   }, err => {
     console.error('Error leyendo tareas:', err);
-    document.getElementById('pendingSummary').textContent = 'No se pudieron cargar las tareas. Revisa la configuración de Firebase o tu conexión.';
+    document.getElementById('pendingSummary').textContent = 'No se pudieron cargar las tareas. Revisa tu conexión.';
   });
 }
 
@@ -118,14 +128,14 @@ document.getElementById('filters').addEventListener('click', event => {
 
 // Clics en la lista (Eliminar y Abrir Modal de Edición)
 document.getElementById('taskList').addEventListener('click', event => {
-  // Eliminar tarea
+  // Eliminar
   const remove = event.target.closest('[data-delete]');
   if(remove) {
     tasksCollection.doc(remove.dataset.delete).delete().catch(err => alert('No se pudo borrar la tarea: ' + err.message));
     return;
   }
 
-  // Abrir modal para Editar tarea
+  // Editar
   const editBtn = event.target.closest('[data-edit]');
   if(editBtn && editModal) {
     const taskId = editBtn.dataset.edit;
@@ -148,7 +158,7 @@ document.getElementById('taskList').addEventListener('change', event => {
   tasksCollection.doc(event.target.dataset.id).update({ done: event.target.checked }).catch(err => alert('No se pudo actualizar la tarea: ' + err.message));
 });
 
-// Cerrar modal de edición al hacer clic en Cancelar
+// Cerrar modal de edición
 const closeEditBtn = document.getElementById('closeEditModal');
 if (closeEditBtn && editModal) {
   closeEditBtn.addEventListener('click', () => {
@@ -156,7 +166,7 @@ if (closeEditBtn && editModal) {
   });
 }
 
-// Enviar cambios de edición a Firebase
+// Guardar cambios en Firebase
 const editTaskForm = document.getElementById('editTaskForm');
 if (editTaskForm && editModal) {
   editTaskForm.addEventListener('submit', event => {
@@ -174,7 +184,7 @@ if (editTaskForm && editModal) {
   });
 }
 
-// Modal de cambio de usuario
+// Cambiar usuario
 document.getElementById('changeUser').addEventListener('click', () => {
   document.getElementById('usernameInput').value = username;
   userModal.showModal();
@@ -188,3 +198,12 @@ document.getElementById('userForm').addEventListener('submit', event => {
 
 if(username){ startUser(username); } else { userModal.showModal(); }
 listenTasks();
+
+// Registrar Service Worker para soporte offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.error('Error registrando Service Worker:', err);
+    });
+  });
+}
