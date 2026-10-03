@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi organizador</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- Corregido el nombre del CSS para que cargue los estilos en móvil y PC -->
+  <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/906/906334.png" type="image/png">
 </head>
 <body>
@@ -15,7 +16,7 @@
       <div class="user-greeting">
         <span class="sub-title">ORGANIZADOR PERSONAL</span>
         <h1>Hola, <span id="userNameDisplay">Gabo</span> 🐱</h1>
-        <p class="date-display" id="currentDateDisplay">Hoy es viernes, 2 de octubre.</p>
+        <p class="date-display" id="currentDateDisplay">Cargando fecha...</p>
       </div>
       <div class="progress-box">
         <span class="progress-title">Progreso de hoy</span>
@@ -79,12 +80,12 @@
       </div>
 
       <ul class="task-list" id="taskList">
-        <!-- Las tareas se renderizan dinámicamente aquí -->
+        <!-- Las tareas se renderizan dinámicamente -->
       </ul>
     </section>
   </div>
 
-  <!-- SDKs de Firebase (compatiblidad v10) -->
+  <!-- SDKs de Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js"></script>
